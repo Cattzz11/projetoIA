@@ -116,3 +116,79 @@
     )
 )
 
+(defun do-play-pc-pc (tab peca num-caixas-p1 num-caixas-p2)
+	(let* (
+		(play (read-play tab))
+		(new-tab (do-play tab peca (first play) (second play) (third play)))
+		(num-caixas-player (caixas-fechadas new-tab))
+	)
+	(cond
+		((winner-p tab num-caixas-player peca num-caixas-p1 num-caixas-p2)
+			(progn
+				(format t "~%> O jogador ~a ganhou!")
+				(play-again)
+			)
+		)
+		((tabululeiro-full new-tab)
+			(progn
+				(format t "~%> Empate!")
+			)
+		)
+		(and 
+			(= peca *jogador1*)
+			(> num-caixas-player num-caixas-p1))
+		)
+		(progn 
+			(imprime-tab new-tab)
+			(do-play-pc-pc new-tab peca num-caixas-p1 num-caixas-p2)
+		)
+		(T
+			(progn
+				(imprime-tab new-tab)
+				(do-play-pc-pc new-tab (change-peca peca) num-caixas-player num-caixas-p2)
+			)
+		)
+	)
+)
+
+(defun humano-play (tab peca num-caixas-p1 num-caixas-p2 path)
+	(let* (
+		(play (read-play tab))
+		(new-tab (do-play tab peca (first play) (second play) (third play)))
+		(num-caixas-fechadas-tab-antigo (caixas-fechadas tab))
+		(num-caixas-fechadas-tab(caixas-fechadas new-tab))
+		(numero-c-p1 (+ num-caixas-p1 (- num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo)))
+	)
+	(format t "~%> Caixas Player 1: ~a~%" num-caixas-p1)
+	(format t "~%> Caixas Player 2: ~a~%" num-caixas-p2)
+	(cond
+		((winner-p new-tab num-caixas-fechadas-tab peca num-caixas-p1 num-caixas-p2)
+			(progn
+				(format t "~%> O jogador ~a ganhou!")
+				(play-again)
+			)
+		)
+		((tabululeiro-full new-tab)
+			(progn
+				(format t "~%> Empate!")
+			)
+		)
+		(and 
+			(= peca *jogador1*)
+			(> num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo))
+		)
+		(progn 
+			(imprime-tab new-tab)
+			(humano-play new-tab peca num-caixas-p1 num-caixas-p2 path)
+		)
+		(T
+			(progn
+				(pc-play new-tab (change-peca peca) num-caixas-p1 num-caixas-p2 path)
+			)
+		)
+	)
+)
+	
+	
+	
+
