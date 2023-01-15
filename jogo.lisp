@@ -151,7 +151,7 @@
 	)
 )
 
-(defun humano-play (tab peca num-caixas-p1 num-caixas-p2 path)
+(defun pc-play (tab peca num-caixas-p1 num-caixas-p2 path)
 	(let* (
 		(play (read-play tab))
 		(new-tab (do-play tab peca (first play) (second play) (third play)))
@@ -179,7 +179,7 @@
 		)
 		(progn 
 			(imprime-tab new-tab)
-			(humano-play new-tab peca num-caixas-p1 num-caixas-p2 path)
+			(pc-play new-tab peca num-caixas-p1 num-caixas-p2 path)
 		)
 		(T
 			(progn
