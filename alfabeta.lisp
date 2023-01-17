@@ -1,3 +1,9 @@
+(defvar *corte-alfa* 0)
+(defvar *corte-beta* 0)
+(defvar *jogada-pc* nil) 
+(defvar *nos-analisados* 0)
+(defvar *tempo-despendido* 0)
+
 ;; algoritmo alfabeta com cortes alfa-beta
 ;;   entrada: nó raiz, profundidade máxima, jogador atual
 ;;   saída: melhor jogada

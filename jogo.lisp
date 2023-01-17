@@ -39,11 +39,11 @@
 	(loop	
 		(progn
 			(format t "~%> ------------------------------------------------------")
-                        (format t "~%>|                 Dots and Boxes Lisp                 |")
-                        (format t "~%>|                                                     |")
-                        (format t "~%>|               1 - Iniciar Jogo                      |")
-                        (format t "~%>|               3 - Sair                              |")
-                        (format t "~%>|                                                     |")
+            (format t "~%>|                 Dots and Boxes Lisp                 |")
+        	(format t "~%>|                                                     |")
+            (format t "~%>|               1 - Iniciar Jogo                      |")
+            (format t "~%>|               3 - Sair                              |")
+            (format t "~%>|                                                     |")
 			(format t "~%> ------------------------------------------------------")
 			(format t "~%> Opcao")
 			(format t "~%> ")
@@ -52,7 +52,7 @@
 				(cond
 					((not (numberp opcao)) (init-menu ))		
 					((and (<= opcao 2) (>= opcao 1)) (cond
-														((= opcao 1) (start-play caminho))
+														((= opcao 1) (start-play path))
 														((= opcao 2) (progn (format t "PROGRAMA TERMINADO")) (return))
 													)
 					)
@@ -84,8 +84,8 @@
 					(cond
 						((not (numberp opcao)) (menu-selecionar-jogo))		
 						((and (<= opcao 3) (>= opcao 1)) (cond
-															((= opcao 1) (fazer-uma-partida-pc-pc))
-															((= opcao 2) (fazer-uma-partida-humano-pc caminho))
+															((= opcao 1) (do-play-pc-pc))
+															((= opcao 2) (do-play-humano-pc path))
 															((= opcao 3) (return))
 														)
                         )
@@ -102,8 +102,8 @@
 
 (defun do-play-pc-pc ()
     (if (y-or-n-p "Pretende iniciar a jogada como Player 1? (y/n)")
-        (pc-pc-play (tab-init) *jogador1* 0 0)
-        (pc-pc-play (tab-init) *jogador2* 0 0)
+        (play-pc-pc  (tab-init) *jogador1* 0 0)
+        (play-pc-pc  (tab-init) *jogador2* 0 0)
     )
 )
 
@@ -116,7 +116,7 @@
     )
 )
 
-(defun do-play-pc-pc (tab peca num-caixas-p1 num-caixas-p2)
+(defun play-pc-pc (tab peca num-caixas-p1 num-caixas-p2)
 	(let* (
 		(play (read-play tab))
 		(new-tab (do-play tab peca (first play) (second play) (third play)))
@@ -151,7 +151,7 @@
 	)
 )
 
-(defun pc-play (tab peca num-caixas-p1 num-caixas-p2 path)
+(defun human-play (tab peca num-caixas-p1 num-caixas-p2 path)
 	(let* (
 		(play (read-play tab))
 		(new-tab (do-play tab peca (first play) (second play) (third play)))
@@ -189,6 +189,63 @@
 	)
 )
 	
+(defun pc-play (tab peca num-caixas-p1 num-caixas-p2 path &optional(time-play (get-universal-time)))
+	(let* (
+		(value-alfa-beta (alfa-beta (criar-no tab 0 0 num-caixas-p1 num-caixas-p2) 3 peca 'utilidade-function))
+		(new-tab (estado pc-play))
+		(num-caixas-fechadas-tab-antigo (caixas-fechadas tab))
+		(num-caixas-fechadas-tab(caixas-fechadas new-tab))
+		(numero-c-p2 (+ num-caixas-p2 (- num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo)))
+		(print-winner (winner-p new-tab num-caixas-fechadas-tab peca num-caixas-p1 numero-c-p2))
+		(stats (statslog new-tab value-alfa-beta print-winner path))
+	)
+	(progn
+		(cond 
+			((winner-p new-tab num-caixas-fechadas-tab peca num-caixas-p1 numero-c-p2)
+				(progn
+					(format t "~%Ganhou!")
+					(format t "~%Tempo demorado: ~a" *start-time*)
+					stats)
+			)
+			((tabululeiro-full new-tab)
+				(progn
+					(format t "~%Empate!")
+					(format t "~%Tempo demorado: ~a" *start-time*)
+					stats)
+			)
+			((and 
+				(= peca *jogador2*)
+				(> num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo))
+			)
+			(pc-play new-tab peca num-caixas-p1 numero-c-p2 path time-play)
+		)
+		(T (progn
+            (let ((new-time (+ *start-time* (- (get-universal-time) time-play))))
+              (let ((*start-time* new-time))
+                (format t "~%Tempo ~a:" *start-time*) (format t "segundos~%")
+                (imprime-tab new-tab)
+                (human-play new-tab (change-peca peca))
+			  )
+			)
+		   )
+		)
+	)
+)	
 	
-	
+(defun winner-p (tab new-num-caixas peca c-p1 c-p2)
+	(let*
+		(num-linhas (get-num-linhas tab))
+		(num-colunas (get-num-colunas tab))
+		(num-max-caixas (* num-linhas num-colunas))
+		(num-caixas-vencer (cond ((evenp num-max-caixas) (+ (/ num-max-caixas 2) 1)) (T (/ (+ num-max-caixas 1) 2))))
+		(resultado (>= new-num-caixas num-caixas-vencer))
+	)
+	(cond 
+		(resultado (cond
+			((and (= peca *jogador1*) (> c-p1 c-p2)) *jogador1*)
+			((and (= peca *jogador2*) (> c-p2 c-p1)) *jogador2*)
+		))
+		(T nil)
+	)
+)
 
