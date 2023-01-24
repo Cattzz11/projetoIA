@@ -230,7 +230,7 @@
 		   )
 		)
 	)
-)	
+)	)
 	
 (defun winner-p (tab new-num-caixas peca c-p1 c-p2)
 	(let*
@@ -292,11 +292,11 @@
 (defun le-operador ()
 "Lê o operador que o utilizador pretende executar"
 (format t "%> ------------------------------------------------------")
-(format t "%>| Tipo de Jogada |")
-(format t "%>| |")
-(format t "%>| 1.colocacao de um arco horizontal |")
-(format t "%>| 2.colocacao de um arco vertical |")
-(format t "%>| |")
+(format t "%>| 					Tipo de Jogada 					   |")
+(format t "%>| 													   |")
+(format t "%>| 			1.colocacao de um arco horizontal 		   |")
+(format t "%>| 			2.colocacao de um arco vertical 		   |")
+(format t "%>| 													   |")
 (format t "%> ------------------------------------------------------")
 (format t "%> Opcao")
 (format t "%> ")
@@ -309,42 +309,127 @@
 'inserir-arco-horizontal
 'inserir-arco-vertical))))
 
-(defun le-valor-x (valor) "Le a coordenada x que o utilizador pretende inserir o arco"
-(format t "%> ------------------------------------------------------")
-(format t "%>| Coordenada x |")
-(format t "%>| |")
-(format t "%>| 1.1 |")
-(format t "%>| 2.2 |")
-(format t "%>| 3.3 |")
-(format t "%>| 4.4 |")
-(format t "%>| |")
-(format t "%> ------------------------------------------------------")
-(format t "%> Opcao")
-(format t "%> ")
-(let ((valor-lido (read)))
-(if (or (not (integerp valor-lido))
-(< valor-lido 1) (> valor-lido valor))
-(progn (format t "&Entrada inválida.")
-(le-valor-x valor))
-valor-lido)))
 
 (defun le-valor-y (valor) "Le a coordenada y que o utilizador pretende inserir o arco"
-(format t "%> ------------------------------------------------------")
-(format t "%>| Coordenada y |")
-(format t "%>| |")
-(format t "%>| 1.1 |")
-(format t "%>| 2.2 |")
-(format t "%>| 3.3 |")
-(format t "%>| 4.4 |")
-(format t "%>| |")
-(format t "%> ------------------------------------------------------")
-(format t "%> Opcao")
-(format t "%> ")
+(format t "~&Valor de ~A [1 <= ~A <= 7]: " valor valor)
 (let ((valor-lido (read)))
-(if (or (not (integerp valor-lido))
-(< valor-lido 1) (> valor-lido valor))
-(progn (format t "&Entrada inválida.")
+(cond ((or (not (integerp valor-lido))
+(< valor-lido 1) (> valor-lido 8))
+(format t "&Entrada inválida.")
 (le-valor-y valor))
-valor-lido)))
+(T valor-lido))))
+
+(defun le-valor-x (valor) "Le a coordenada y que o utilizador pretende inserir o arco"
+(format t "~&Valor de ~A [1 <= ~A <= 8]: " valor valor)
+(let ((valor-lido (read)))
+(cond ((or (not (integerp valor-lido))
+(< valor-lido 1) (> valor-lido 7))
+(format t "&Entrada inválida.")
+(le-valor-x valor))
+(T valor-lido))))
 
 
+(defun tab-init (&optional)
+	(
+ (;arcos horizontais
+ (0 0 0 0 0 0)
+ (0 0 0 0 0 0)
+ (0 0 0 0 0 0)
+ (0 0 0 0 0 0)
+ (0 0 0 0 0 0)
+ (0 0 0 0 0 0)
+ )
+ (;arcos verticais
+ (0 0 0 0 0)
+ (0 0 0 0 0)
+ (0 0 0 0 0)
+ (0 0 0 0 0)
+ (0 0 0 0 0)
+ (0 0 0 0 0)
+ (0 0 0 0 0)
+ )
+)
+)
+
+(defun do-play (tab peca operador x y)
+	(funcall operador x y peca tab)
+)
+
+(defun imprime-tabuleiro (tabuleiro) "Imprime o tabuleiro, linha a linha"
+	(let ((linhas (first tabuleiro)) (colunas (append (rodar (second tabuleiro)) '(NIL))))
+		(mapcar #'(lambda (linha coluna) (progn (imprime-linha linha) 
+												(imprime-coluna coluna)
+												(imprime-coluna coluna))) linhas colunas)
+	)
+)
+
+(defun converte-arco-horizontal (v)
+  "Converte os inteiros dos arcos horizontais para os simbolos --- (jogador com peca 1) e ... (jogador com peca 2)"
+  (cond ((= v 1) "---")
+		((= v 2) "...")
+		(T "   ")))
+
+(defun converte-arco-vertical (v)
+  "Converte os inteiros dos arcos verticais para os simbolos | (jogador com peca 1) e . (jogador com peca 2)"
+  (cond ((= v 1) "|")
+		((= v 2) ".")
+		(T " ")))
+
+(defun imprime-linha (linha)
+  "Imprime uma linha do tabuleiro"
+  (format t "~%")
+  (mapcar #'(lambda (v) (format t "~A" (converte-arco-horizontal v))) linha)
+  (format t "~%"))
+
+(defun imprime-coluna (coluna)
+  "Imprime uma coluna do tabuleiro"
+  (mapcar #'(lambda (v) (format t "~A" (converte-arco-vertical v))) coluna)
+  (format t "~%"))
+
+(defun rodar (lista)
+  "Roda uma lista de listas"
+  (cond ((null (first lista)) nil)
+		(T (cons (mapcar #'first lista) (rodar (mapcar #'rest lista))))))
+
+(defun alisa (lista) "Retorna uma lista com todos os Átomos na lista principal"
+	(cond ((null lista) nil)
+		((atom (first lista)) (cons (first lista) (alisa (rest lista))))
+		(T (alisa (append (first lista) (rest lista))))
+	)
+)
+
+(defun tabuleiro-preenchido-p (lista)
+  "Verifica se o tabuleiro está preenchido"
+  (let* ((lista-alisada (alisa lista))
+         (tamanho (length lista-alisada))
+         (resultado (reduce #'+ (mapcar #'(lambda (n)
+                                           (if (null n) 0 1))
+                                       lista-alisada))))
+    (if (= tamanho resultado)
+        t
+        nil)))
+
+(defun ler-teclado () "Ler do teclado algo do utilizador"
+	(read)
+)
+
+(defun estatisticas-log (tabuleiro alfabeta peca-vencedora caminho) "Função que escreve as estatisticas num ficheiro e imprime na consola."	
+		(with-open-file (file (concatenate 'string caminho "\\log.dat")
+							:direction :output
+							:if-exists :append 
+							:if-does-not-exist :create)
+			;; Esta parte serÃ¡ escrita no ficheiro do tipo .DAT
+			(format file "~%Vencedor: ~s ~%" peca-vencedora)
+			(format file "~%Tabuleiro: ~s ~%" tabuleiro)
+			(format file "~%Caixas Fechadas: ~s ~%" (caixas-fechadas tabuleiro))
+			(format file "~%Cortes Alfa: ~s ~%" *corte-alfa*)
+			(format file "~%Cortes Beta: ~s ~%" *corte-beta*)
+			(format file "~%Nos analisados: ~s ~%" *nos-analisados* )
+			(format file "~%Tempo Maximo ~s ~%" *tempo-despendido*)
+			(format file "___________________________________________________~%~%~%")
+		)	
+		;;Esta parte serÃ¡ mostrada na consola
+			(format t "~%Vencedor: ~s ~%" peca-vencedora)
+			(format t "~%Tabuleiro: ~s ~%" tabuleiro)
+			(format t "~%Caixas Fechadas: ~s ~%" (caixas-fechadas tabuleiro))		
+)

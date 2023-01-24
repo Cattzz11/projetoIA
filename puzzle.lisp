@@ -127,6 +127,7 @@
     )
 )
 
+
 (defun contar-zeros-lista (list)
   (+ (contar-zeros-lista-aux (car list)) (contar-zeros-lista-aux (car (cdr list))))
 ) 
@@ -165,22 +166,9 @@
 )
 
 ;; Recebe indices de linha e coluna e uma lista de arcos horizontais ou de arcos verticais e verifica se naquela posição o valor é 1, se for devolve 0, se for 0 devolve 1
-(defun possivel-add-arco (coluna lista)
-    (cond
-        ((null lista) nil)
-        ((= linha 1) (possivel-add-arco-aux (car lista)))
-        (t (possivel-add-arco (- linha 1) (cdr lista)))
-    )
-)
-
-
-(defun possivel-add-arco-aux (indice lista)
-    (cond
-        ((null lista) nil)
-        ((= indice 1) (substituir 1 lista))
-        (t (cons (car lista) (possivel-add-arco-aux (- indice 1) (cdr lista))))
-    )
-)
+(defun possivel-add-arco (linha coluna lista)
+  (let ((elemento (nth (1- linha) (nth (1- coluna) lista))))
+    (if (= elemento 1) 0 (if (= elemento 0) 1 nil))))
 
 
 

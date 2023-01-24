@@ -30,25 +30,17 @@
 ;;   fim-se
 ;; fim-algoritmo
 
-(defun alfa-beta (no profundidade-limite peca f-utilidade &optional (alfa -999999) (beta 999999) (tempo-inicial (get-universal-time))(tempo-maximo 5000))
-"Função alfa-beta, com cortes. Função que se baseia no max-side e min-side dependendo da profundidade."
-(let*(
-(peca-a-jogar (if (= (get-no-profundidade no) 0) peca (troca-peca peca)))
-(max-mix (verificar-profundidade-jogador no))
-(caixas-jogador-1 (get-caixas-jogador-1 no))
-(caixas-jogador-2 (get-caixas-jogador-2 no))
-(tempo-actual (get-universal-time))
-(tempo-gasto (- tempo-actual tempo-inicial))
-(tempo-dispendido (setf tempo-despendido tempo-gasto))
-(nos-analisados (setf nos-analisados (+ nos-analisados 1)))
-)
-(if (or (= profundidade-limite (get-no-profundidade no)))
-(progn
-(setf nos-analisados (+ nos-analisados 1))
-(get-no-utilidade no))
-(if (eq max-mix 'MAX)
-(max-side (sucessores-alfabeta no (operadores) profundidade-limite peca f-utilidade caixas-jogador-1 caixas-jogador-2) profundidade-limite peca-a-jogar f-utilidade alfa beta tempo-inicial tempo-maximo)
-(min-side (sucessores-alfabeta no (operadores) profundidade-limite peca f-utilidade caixas-jogador-1 caixas-jogador-2) profundidade-limite peca-a-jogar f-utilidade alfa beta tempo-inicial tempo-maximo)))))
+(defun alfabeta (estado profundidade-limite peca-a-jogar f-utilidade alfa beta tempo-inicial tempo-maximo)
+  (let* ((operadores (operadores-estado estado))
+       (sucessores (sucessores-alfabeta (make-no estado 0 (funcall f-utilidade estado (caixas-fechadas-j1 estado) (caixas-fechadas-j2 estado))) operadores profundidade-limite peca-a-jogar f-utilidade (caixas-fechadas-j1 estado) (caixas-fechadas-j2 estado)))
+       (sucessores-ordenados (sort sucessores (lambda (no1 no2) (> (get-no-utilidade no1) (get-no-utilidade no2))))))
+    (if (>= (get-no-utilidade (first sucessores-ordenados)) beta)
+      (first sucessores-ordenados)
+      (let* ((maximo (max-side sucessores-ordenados profundidade-limite peca-a-jogar f-utilidade alfa beta tempo-inicial tempo-maximo))
+           (novo-alfa (max alfa (get-no-utilidade (first maximo)))))
+      (if (>= novo-alfa beta)
+          (first maximo)
+        (min-side (rest maximo) profundidade-limite peca-a-jogar f-utilidade novo-alfa beta tempo-inicial tempo-maximo))))))
 
 
 (defun sucessores (no operadores peca profundidade-maxima funcao-utilidade caixas-fechadas-j1 caixas-fechadas-j2)
@@ -146,17 +138,7 @@ nil
       (if (equal peca 1) 2 1)
 )
 
-(defun alfabeta (estado profundidade-limite peca-a-jogar f-utilidade alfa beta tempo-inicial tempo-maximo)
-  (let* ((operadores (operadores-estado estado))
-       (sucessores (sucessores-alfabeta (make-no estado 0 (funcall f-utilidade estado (caixas-fechadas-j1 estado) (caixas-fechadas-j2 estado))) operadores profundidade-limite peca-a-jogar f-utilidade (caixas-fechadas-j1 estado) (caixas-fechadas-j2 estado)))
-       (sucessores-ordenados (sort sucessores (lambda (no1 no2) (> (get-no-utilidade no1) (get-no-utilidade no2))))))
-    (if (>= (get-no-utilidade (first sucessores-ordenados)) beta)
-      (first sucessores-ordenados)
-      (let* ((maximo (max-side sucessores-ordenados profundidade-limite peca-a-jogar f-utilidade alfa beta tempo-inicial tempo-maximo))
-           (novo-alfa (max alfa (get-no-utilidade (first maximo)))))
-      (if (>= novo-alfa beta)
-          (first maximo)
-        (min-side (rest maximo) profundidade-limite peca-a-jogar f-utilidade novo-alfa beta tempo-inicial tempo-maximo))))))
+
 
 (defun verifica-max-sucessor(alfa valor-utilidade sucessor)
       (if (>= valor-utilidade alfa)
@@ -251,7 +233,7 @@ nil
       (append (list valor-por-omissao) (criar-lista-numeros (- tamanho 1) valor-por-omissao)))
 )
 
-(defun funcao-utilidade (no peca old-utilidade caixas-fechadas-j1 caixas-fechadas-j2 old-numero-caixas-j1 old-numero-caixas-j2)
+(defun f-utilidade (no peca old-utilidade caixas-fechadas-j1 caixas-fechadas-j2 old-numero-caixas-j1 old-numero-caixas-j2)
 "Função utilidade que faz a verificação do vencedor atribuindo um valor para o resultado"
       (let* ((estado (get-no-estado no))
             (num-caixas-j1 (caixas-fechadas-j1 estado))
