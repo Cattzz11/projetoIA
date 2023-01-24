@@ -249,3 +249,102 @@
 	)
 )
 
+(defun le-jogada (tabuleiro) "Le uma jogada fazendo a verificacao da sua legalidade. A jogada lida (arco-horizontal ou arco-vertical) e a posicao na no tabuleiro (entre 1 e 8)"
+	(let* (
+		(jogada (read))
+		(posicao (read))
+		(legal (legal-p tabuleiro jogada posicao))
+	)
+		(cond
+			(legal (list jogada posicao))
+			(T (progn
+				(format t "~%Jogada ilegal!~%")
+				(le-jogada tabuleiro)
+			))
+		)
+	)
+)
+
+(defun legal-p (tabuleiro jogada posicao)
+	(let* (
+		(num-linhas (get-num-linhas tabuleiro))
+		(num-colunas (get-num-colunas tabuleiro))
+		(num-max-caixas (* num-linhas num-colunas))
+		(legal (cond
+			((and (>= posicao 1) (<= posicao num-max-caixas))
+				(cond
+					((and (equal jogada 'arco-horizontal) (<= posicao (- num-max-caixas num-colunas)))
+						(T)
+					)
+					((and (equal jogada 'arco-vertical) (<= posicao (- num-max-caixas 1)))
+						(T)
+					)
+					(T nil)
+				)
+			)
+			(T nil)
+		))
+	)
+		legal
+	)
+)
+
+(defun le-operador ()
+"Lê o operador que o utilizador pretende executar"
+(format t "%> ------------------------------------------------------")
+(format t "%>| Tipo de Jogada |")
+(format t "%>| |")
+(format t "%>| 1.colocacao de um arco horizontal |")
+(format t "%>| 2.colocacao de um arco vertical |")
+(format t "%>| |")
+(format t "%> ------------------------------------------------------")
+(format t "%> Opcao")
+(format t "%> ")
+(let ((operador-lido (read)))
+(if (or (not (integerp operador-lido))
+(< operador-lido 1) (> operador-lido 2))
+(progn (format t "&Entrada inválida.")
+(le-operador))
+(if (= 1 operador-lido)
+'inserir-arco-horizontal
+'inserir-arco-vertical))))
+
+(defun le-valor-x (valor) "Le a coordenada x que o utilizador pretende inserir o arco"
+(format t "%> ------------------------------------------------------")
+(format t "%>| Coordenada x |")
+(format t "%>| |")
+(format t "%>| 1.1 |")
+(format t "%>| 2.2 |")
+(format t "%>| 3.3 |")
+(format t "%>| 4.4 |")
+(format t "%>| |")
+(format t "%> ------------------------------------------------------")
+(format t "%> Opcao")
+(format t "%> ")
+(let ((valor-lido (read)))
+(if (or (not (integerp valor-lido))
+(< valor-lido 1) (> valor-lido valor))
+(progn (format t "&Entrada inválida.")
+(le-valor-x valor))
+valor-lido)))
+
+(defun le-valor-y (valor) "Le a coordenada y que o utilizador pretende inserir o arco"
+(format t "%> ------------------------------------------------------")
+(format t "%>| Coordenada y |")
+(format t "%>| |")
+(format t "%>| 1.1 |")
+(format t "%>| 2.2 |")
+(format t "%>| 3.3 |")
+(format t "%>| 4.4 |")
+(format t "%>| |")
+(format t "%> ------------------------------------------------------")
+(format t "%> Opcao")
+(format t "%> ")
+(let ((valor-lido (read)))
+(if (or (not (integerp valor-lido))
+(< valor-lido 1) (> valor-lido valor))
+(progn (format t "&Entrada inválida.")
+(le-valor-y valor))
+valor-lido)))
+
+
