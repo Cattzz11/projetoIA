@@ -152,27 +152,6 @@ nil
       nil)
       )
 
-(defun f-utilidade(no peca old-utilidade caixas-fechadas-j1 caixas-fechadas-j2 old-num-caixas-j1 old-num-caixas-j2)
-      (let* ((estado (get-estado no))
-            (num-caixas-j1 (caixas-fechadas-j1 estado))
-            (num-caixas-j2 (caixas-fechadas-j2 estado))
-            (utilidade (get-utilidade no))
-            (profundidade (get-profundidade no))
-            (valor-utilidade (if (equal peca 1)
-                              (+ utilidade (* 10 (- num-caixas-j1 old-num-caixas-j1)) (* 10 (- num-caixas-j2 old-num-caixas-j2)))
-                              (+ utilidade (* 10 (- num-caixas-j2 old-num-caixas-j2)) (* 10 (- num-caixas-j1 old-num-caixas-j1))))))
-      (if (equal profundidade 0)
-            valor-utilidade
-      (if (equal peca 1)
-            (if (>= valor-utilidade old-utilidade)
-                  valor-utilidade
-            (- valor-utilidade))
-      (if (<= valor-utilidade old-utilidade)
-            valor-utilidade
-      (- valor-utilidade))))
-      )
-)
-
 (defun check-prof-player(no)
       (if (equal (get-profundidade no) 0)
             (get-estado no)
