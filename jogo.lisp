@@ -128,7 +128,7 @@
 				(format t "~%> O jogador ~a ganhou!")
 			)
 		)
-		((tabululeiro-full new-tab)
+		((tab-completo new-tab)
 			(progn
 				(format t "~%> Empate!")
 			)
@@ -190,7 +190,7 @@
 (defun pc-play (tab peca num-caixas-p1 num-caixas-p2 path &optional(time-play (get-universal-time)))
 	(let* (
 		(value-alfa-beta (alfabeta (criar-no tab 0 0 num-caixas-p1 num-caixas-p2) 3 peca 'f-utilidade))
-		(new-tab (estado pc-play))
+		(new-tab (get-estado pc-play))
 		(num-caixas-fechadas-tab-antigo (caixas-fechadas-count tab))
 		(num-caixas-fechadas-tab(caixas-fechadas new-tab))
 		(numero-c-p2 (+ num-caixas-p2 (- num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo)))
