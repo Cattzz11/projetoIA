@@ -48,7 +48,7 @@
 			(format t "~%> Opcao")
 			(format t "~%> ")
 			
-			(let ((opcao (read-keyboard)))
+			(let ((opcao (ler-teclado)))
 				(cond
 					((not (numberp opcao)) (init-menu ))		
 					((and (<= opcao 2) (>= opcao 1)) (cond
@@ -80,7 +80,7 @@
 				(format t "~%> ------------------------------------------------------")
 				(format t "~%> Opcao")
 				(format t "~%> ")	
-				(let ((opcao (read-keyboard)))
+				(let ((opcao (ler-teclado)))
 					(cond
 						((not (numberp opcao)) (menu-selecionar-jogo))		
 						((and (<= opcao 3) (>= opcao 1)) (cond
@@ -110,7 +110,7 @@
 (defun do-play-humano-pc ()
     (let ((start-time 0))
         (if (y-or-n-p "Pretende iniciar a jogada como Player 1? (y/n)")
-            (humano-play (tab-init) *jogador1* 0 0)
+            (human-play (tab-init) *jogador1* 0 0)
             (pc-play (tab-init) *jogador2* 0 0)
         )
     )
@@ -118,15 +118,14 @@
 
 (defun play-pc-pc (tab peca num-caixas-p1 num-caixas-p2)
 	(let* (
-		(play (read-play tab))
+		(play (le-jogada tab))
 		(new-tab (do-play tab peca (first play) (second play) (third play)))
-		(num-caixas-player (caixas-fechadas new-tab))
+		(num-caixas-player (caixas-fechadas-count new-tab))
 	)
 	(cond
 		((winner-p tab num-caixas-player peca num-caixas-p1 num-caixas-p2)
 			(progn
 				(format t "~%> O jogador ~a ganhou!")
-				(play-again)
 			)
 		)
 		((tabululeiro-full new-tab)
@@ -139,13 +138,13 @@
 			(> num-caixas-player num-caixas-p1))
 		)
 		(progn 
-			(imprime-tab new-tab)
+			(imprime-tabuleiro new-tab)
 			(do-play-pc-pc new-tab peca num-caixas-p1 num-caixas-p2)
 		)
 		(T
 			(progn
-				(imprime-tab new-tab)
-				(do-play-pc-pc new-tab (change-peca peca) num-caixas-player num-caixas-p2)
+				(imprime-tabuleiro new-tab)
+				(do-play-pc-pc new-tab (trocar-peca peca) num-caixas-player num-caixas-p2)
 			)
 		)
 	)
@@ -153,10 +152,10 @@
 
 (defun human-play (tab peca num-caixas-p1 num-caixas-p2 path)
 	(let* (
-		(play (read-play tab))
+		(play (le-jogada tab))
 		(new-tab (do-play tab peca (first play) (second play) (third play)))
-		(num-caixas-fechadas-tab-antigo (caixas-fechadas tab))
-		(num-caixas-fechadas-tab(caixas-fechadas new-tab))
+		(num-caixas-fechadas-tab-antigo (caixas-fechadas-count tab))
+		(num-caixas-fechadas-tab (caixas-fechadas-count new-tab))
 		(numero-c-p1 (+ num-caixas-p1 (- num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo)))
 	)
 	(format t "~%> Caixas Player 1: ~a~%" num-caixas-p1)
@@ -165,10 +164,9 @@
 		((winner-p new-tab num-caixas-fechadas-tab peca num-caixas-p1 num-caixas-p2)
 			(progn
 				(format t "~%> O jogador ~a ganhou!")
-				(play-again)
 			)
 		)
-		((tabululeiro-full new-tab)
+		((tab-completo new-tab)
 			(progn
 				(format t "~%> Empate!")
 			)
@@ -178,12 +176,12 @@
 			(> num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo))
 		)
 		(progn 
-			(imprime-tab new-tab)
+			(imprime-tabuleiro new-tab)
 			(pc-play new-tab peca num-caixas-p1 num-caixas-p2 path)
 		)
 		(T
 			(progn
-				(pc-play new-tab (change-peca peca) num-caixas-p1 num-caixas-p2 path)
+				(pc-play new-tab (trocar-peca peca) num-caixas-p1 num-caixas-p2 path)
 			)
 		)
 	)
@@ -191,13 +189,13 @@
 	
 (defun pc-play (tab peca num-caixas-p1 num-caixas-p2 path &optional(time-play (get-universal-time)))
 	(let* (
-		(value-alfa-beta (alfa-beta (criar-no tab 0 0 num-caixas-p1 num-caixas-p2) 3 peca 'utilidade-function))
+		(value-alfa-beta (alfabeta (criar-no tab 0 0 num-caixas-p1 num-caixas-p2) 3 peca 'f-utilidade))
 		(new-tab (estado pc-play))
-		(num-caixas-fechadas-tab-antigo (caixas-fechadas tab))
+		(num-caixas-fechadas-tab-antigo (caixas-fechadas-count tab))
 		(num-caixas-fechadas-tab(caixas-fechadas new-tab))
 		(numero-c-p2 (+ num-caixas-p2 (- num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo)))
 		(print-winner (winner-p new-tab num-caixas-fechadas-tab peca num-caixas-p1 numero-c-p2))
-		(stats (statslog new-tab value-alfa-beta print-winner path))
+		(stats (estatisticas-log new-tab value-alfa-beta print-winner path))
 	)
 	(progn
 		(cond 
@@ -207,7 +205,7 @@
 					(format t "~%Tempo demorado: ~a" *start-time*)
 					stats)
 			)
-			((tabululeiro-full new-tab)
+			((tab-completo new-tab)
 				(progn
 					(format t "~%Empate!")
 					(format t "~%Tempo demorado: ~a" *start-time*)
@@ -223,8 +221,8 @@
             (let ((new-time (+ *start-time* (- (get-universal-time) time-play))))
               (let ((*start-time* new-time))
                 (format t "~%Tempo ~a:" *start-time*) (format t "segundos~%")
-                (imprime-tab new-tab)
-                (human-play new-tab (change-peca peca))
+                (imprime-tabuleiro new-tab)
+                (human-play new-tab (trocar-peca peca))
 			  )
 			)
 		   )
@@ -273,10 +271,10 @@
 		(legal (cond
 			((and (>= posicao 1) (<= posicao num-max-caixas))
 				(cond
-					((and (equal jogada 'arco-horizontal) (<= posicao (- num-max-caixas num-colunas)))
+					((and (equal jogada 'get-horizontais) (<= posicao (- num-max-caixas num-colunas)))
 						(T)
 					)
-					((and (equal jogada 'arco-vertical) (<= posicao (- num-max-caixas 1)))
+					((and (equal jogada 'get-verticas) (<= posicao (- num-max-caixas 1)))
 						(T)
 					)
 					(T nil)
@@ -306,8 +304,8 @@
 (progn (format t "&Entrada inválida.")
 (le-operador))
 (if (= 1 operador-lido)
-'inserir-arco-horizontal
-'inserir-arco-vertical))))
+'put-arco-horizontal
+'put-arco-vertical))))
 
 
 (defun le-valor-y (valor) "Le a coordenada y que o utilizador pretende inserir o arco"
@@ -329,7 +327,7 @@
 (T valor-lido))))
 
 
-(defun tab-init (&optional)
+(defun tab-init ()
 	(
  (;arcos horizontais
  (0 0 0 0 0 0)
@@ -350,6 +348,28 @@
  )
 )
 )
+
+(defun tab-completo ()
+(;estado
+ (;tabuleiro figura 1
+ (;arcos horizontais
+ (1 2 1 1 0 2)
+ (2 1 1 1 1 0)
+ (0 2 1 1 2 0)
+ (0 1 0 2 2 0)
+ (1 2 0 0 0 0)
+ (0 1 2 1 2 1)
+ )
+ (;arcos verticais
+ (1 0 1 0 0)
+ (2 1 1 2 2)
+ (2 1 1 2 0)
+ (1 2 2 1 1)
+ (1 2 2 0 0)
+ (0 1 2 1 2)
+ (2 2 1 2 0)
+ )
+ )))
 
 (defun do-play (tab peca operador x y)
 	(funcall operador x y peca tab)
@@ -413,6 +433,14 @@
 	(read)
 )
 
+;; função que troca uma peça de um jogador para a peça do outro jogador
+(defun trocar-peca (peca)
+  (cond
+    ((= peca 1) 2)
+    ((= peca 2) 1)
+  )
+)
+
 (defun estatisticas-log (tabuleiro alfabeta peca-vencedora caminho) "Função que escreve as estatisticas num ficheiro e imprime na consola."	
 		(with-open-file (file (concatenate 'string caminho "\\log.dat")
 							:direction :output
@@ -421,7 +449,7 @@
 			;; Esta parte serÃ¡ escrita no ficheiro do tipo .DAT
 			(format file "~%Vencedor: ~s ~%" peca-vencedora)
 			(format file "~%Tabuleiro: ~s ~%" tabuleiro)
-			(format file "~%Caixas Fechadas: ~s ~%" (caixas-fechadas tabuleiro))
+			(format file "~%Caixas Fechadas: ~s ~%" (caixas-fechadas-count tabuleiro))
 			(format file "~%Cortes Alfa: ~s ~%" *corte-alfa*)
 			(format file "~%Cortes Beta: ~s ~%" *corte-beta*)
 			(format file "~%Nos analisados: ~s ~%" *nos-analisados* )
@@ -431,5 +459,5 @@
 		;;Esta parte serÃ¡ mostrada na consola
 			(format t "~%Vencedor: ~s ~%" peca-vencedora)
 			(format t "~%Tabuleiro: ~s ~%" tabuleiro)
-			(format t "~%Caixas Fechadas: ~s ~%" (caixas-fechadas tabuleiro))		
+			(format t "~%Caixas Fechadas: ~s ~%" (caixas-fechadas-count tabuleiro))		
 )

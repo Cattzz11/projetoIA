@@ -2,16 +2,19 @@
     (list estado prof util caixas-jogador-1 caixas-jogador-2)
 )
 
-(defun estado (no)
+(defun get-estado (no)
     (car no)
 )
 
-(defun profundidade (no)
+(defun get-profundidade (no)
   (car (cdr no))
 )
 
-(defun utilidade (no)
+(defun get-utilidade (no)
   (car (cdr (cdr no)))
+)
+(defun get-no-pai (no)
+  (car (cdr (cdr (cdr no))))
 )
 
 (defun caixas-jogador-1 (no)
@@ -22,19 +25,19 @@
   (car (cdr (cdr (cdr (cdr no)))))
 )
 
-(defun put-arco-horizontal (linha coluna tabuleiro)
-   (cond
-   ((null tabuleiro) nil)
-   ((put-arco-posicao-horizontal linha coluna (get-horizontais tabuleiro)))
-   )
-)
-
 (defun get-horizontais(tab)
     (first tab)
 )
 
 (defun get-verticais(tab)
     (second tab)
+)
+
+(defun put-arco-horizontal (linha coluna tabuleiro)
+   (cond
+   ((null tabuleiro) nil)
+   ((put-arco-posicao-horizontal linha coluna (get-horizontais tabuleiro)))
+   )
 )
 
 (defun put-arco-posicao-horizontal (linha coluna lista)
@@ -60,6 +63,17 @@
    ((null lista) nil)
    ((= linha 1) (cons (substituir coluna (car lista)) (cdr lista)))
    (t (cons (car lista) (put-arco-posicao-vertical (- linha 1) coluna (cdr lista))))
+  )
+)
+
+(defun substituir (coluna lista)
+"Função que recebe um índice, uma lista e valor x e deverá substituir o elemento nessa
+posição pelo valor x"
+  (cond 
+   ((null lista) nil)
+   ((= coluna 1) (cons 1 (cdr lista)))
+   ((> coluna 1) (cons (car lista) (substituir (- coluna 1) (cdr lista))))
+   (t nil)
   )
 )
 
@@ -122,7 +136,7 @@
 (defun contar-objetivo (lista) "conta o numero de caixas fechadas de um tabuleiro"
     (cond
         ((null lista) 0)
-        ((= (contar-zeros (car lista)) 0) (+ 1 (contar-objetivo (cdr lista))))
+        ((= (contar-zeros-lista (car lista)) 0) (+ 1 (contar-objetivo (cdr lista))))
         (t (contar-objetivo (cdr lista)))
     )
 )
@@ -135,13 +149,13 @@
 (defun contar-zeros-lista-aux (list)
   (cond
    ((null list) 0)
-   ((= 0 (find 0 (car list))) (+ (contar-zeros-lista-aux (cdr list)) (count-of 0 (car list))))
+   ((= 0 (find 0 (car list))) (+ (contar-zeros-lista-aux (cdr list)) (contar-ocorrencias 0 (car list))))
    (t (contar-zeros-lista-aux (cdr list)))
   )
 )
 
 
-(defun count-of (the-element list)
+(defun contar-ocorrencias (the-element list)
 "conta o numero de ocorrencias, ou seja, colocamos um elemento e uma lista e conta quantas vezes esse elemento existe numa lista"
   ((lambda (f)
      (funcall f f list 0))
