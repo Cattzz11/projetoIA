@@ -30,9 +30,9 @@
 ;;   fim-se
 ;; fim-algoritmo
 
-(defun alfabeta (estado profundidade-limite peca-a-jogar f-utilidade alfa beta tempo-inicial tempo-maximo)
+(defun alfabeta (estado profundidade-limite peca-a-jogar f-utilidade &optional(alfa most-negative-fixnum) (beta most-positive-fixnum)  (tempo-inicial (get-universal-time))(tempo-maximo 5000))
   (let* ((operadores (get-estado estado))
-       (sucessores (sucessores-alfabeta (criar-no estado 0 (funcall f-utilidade estado (caixas-jogador-1 estado) (caixas-jogador-2 estado))) criar-operadores profundidade-limite peca-a-jogar f-utilidade (caixas-jogador-1 estado) (caixas-jogador-2 estado)))
+       (sucessores (sucessores-alfabeta (criar-no estado 0 (funcall f-utilidade estado (caixas-jogador-1 estado) (caixas-jogador-2 estado))) (criar-operadores) profundidade-limite peca-a-jogar f-utilidade (caixas-jogador-1 estado) (caixas-jogador-2 estado)))
        (sucessores-ordenados (sort sucessores (lambda (no1 no2) (> (get-utilidade no1) (get-utilidade no2))))))
     (if (>= (get-utilidade (first sucessores-ordenados)) beta)
       (first sucessores-ordenados)
@@ -102,7 +102,7 @@ nil
 (estado (get-estado no))
 (profundidade (get-profundidade no))
 (utilidade (get-utilidade no))
-(operadores (criar-operadores estado))
+(operadores (criar-operadores))
 (sucessores (sucessores-alfabeta no operadores profundidade-limite peca-a-jogar f-utilidade (caixas-jogador-1 estado) (caixas-jogador-2 estado)))
 (sucessores-ordenados (sort sucessores (lambda (no1 no2) (> (get-utilidade no1) (get-utilidade no2))))))
 (if (>= (get-utilidade no) beta)
@@ -121,7 +121,7 @@ nil
 (estado (get-estado no))
 (profundidade (get-profundidade no))
 (utilidade (get-utilidade no))
-(operadores (criar-operadores estado))
+(operadores (criar-operadores))
 (sucessores (sucessores-alfabeta no operadores profundidade-limite peca-a-jogar f-utilidade (caixas-fechadas-j1 estado) (caixas-fechadas-j2 estado)))
 (sucessores-ordenados (sort sucessores (lambda (no1 no2) (< (get-no-utilidade no1) (get-no-utilidade no2))))))
 (if (<= (get-utilidade no) alfa)

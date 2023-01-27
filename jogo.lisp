@@ -11,11 +11,9 @@
 )
 
 (defun insert-path()
-    (progn
-        (format t "~%Insira o caminho para o ficheiro: ")
-        (format nil (read-line))
-        (if (file-exists-p (format nil (read-line)))
-            (format nil (read-line))
+    (let ((path (read-line)))
+        (if (file-exists-p path)
+            path
             (progn
                 (format t "~%O caminho inserido não existe. Insira um caminho válido: ")
                 (insert-path)
@@ -24,36 +22,35 @@
     )
 )
 
+
 (defun load-ficheiros(path)
-    (progn
         (compile-file (concatenate 'string path "\\alfabeta.lisp"))
         (compile-file (concatenate 'string path "\\puzzle.lisp"))
         (load (concatenate 'string path "\\alfabeta.lisp"))
         (load (concatenate 'string path "\\puzzle.lisp"))
         (init-menu path)
-    )
 )
 
 
-(defun init-menu (path) "Apresenta o menu principal do programa na consola. Sendo possível iniciar uma procura ou sair do programa"
+(defun init-menu (path) "Apresenta o menu principal do programa na consola. Sendo possÃ­vel iniciar uma procura ou sair do programa"
 	(loop	
 		(progn
 			(format t "~%> ------------------------------------------------------")
-            (format t "~%>|                 Dots and Boxes Lisp                 |")
-        	(format t "~%>|                                                     |")
-            (format t "~%>|               1 - Iniciar Jogo                      |")
-            (format t "~%>|               3 - Sair                              |")
-            (format t "~%>|                                                     |")
+                        (format t "~%>|                 Dots and Boxes Lisp                 |")
+                        (format t "~%>|                                                     |")
+                        (format t "~%>|               1 - Iniciar Jogo                      |")
+                        (format t "~%>|               3 - Sair                              |")
+                        (format t "~%>|                                                     |")
 			(format t "~%> ------------------------------------------------------")
 			(format t "~%> Opcao")
 			(format t "~%> ")
 			
 			(let ((opcao (ler-teclado)))
 				(cond
-					((not (numberp opcao)) (init-menu ))		
+					((not (numberp opcao)) (init-menu path))		
 					((and (<= opcao 2) (>= opcao 1)) (cond
 														((= opcao 1) (start-play path))
-														((= opcao 2) (progn (format t "PROGRAMA TERMINADO")) (return))
+														((= opcao 2) (progn (format t "PROGRAMA TERMINADO")) (exit))
 													)
 					)
 					(T (progn
@@ -75,7 +72,7 @@
 				(format t "~%>|                                                     |")
 				(format t "~%>|            1. Computador vs Computador              |")
 				(format t "~%>|            2. Humano vs Computador 			        |") 
-				(format t "~%>|            3. Voltar atrás	                        |")		
+				(format t "~%>|            3. Voltar atrÃ¡s	                        |")		
 				(format t "~%>|                                                     |")
 				(format t "~%> ------------------------------------------------------")
 				(format t "~%> Opcao")
@@ -86,7 +83,7 @@
 						((and (<= opcao 3) (>= opcao 1)) (cond
 															((= opcao 1) (do-play-pc-pc))
 															((= opcao 2) (do-play-humano-pc path))
-															((= opcao 3) (return))
+															((= opcao 3) (init-menu path))
 														)
                         )
 						(T (progn
@@ -107,145 +104,98 @@
     )
 )
 
-(defun do-play-humano-pc ()
+(defun do-play-humano-pc (path)
     (let ((start-time 0))
         (if (y-or-n-p "Pretende iniciar a jogada como Player 1? (y/n)")
-            (human-play (tab-init) *jogador1* 0 0)
-            (pc-play (tab-init) *jogador2* 0 0)
+            (human-play (tab-init) *jogador1* 0 0 path)
+            (pc-play (tab-init) *jogador2* 0 0 path start-time)
         )
     )
 )
 
 (defun play-pc-pc (tab peca num-caixas-p1 num-caixas-p2)
-	(let* (
-		(play (le-jogada tab))
-		(new-tab (do-play tab peca (first play) (second play) (third play)))
-		(num-caixas-player (caixas-fechadas-count new-tab))
-	)
-	(cond
-		((winner-p tab num-caixas-player peca num-caixas-p1 num-caixas-p2)
-			(progn
-				(format t "~%> O jogador ~a ganhou!")
-			)
-		)
-		((tab-completo new-tab)
-			(progn
-				(format t "~%> Empate!")
-			)
-		)
-		(and 
-			(= peca *jogador1*)
-			(> num-caixas-player num-caixas-p1))
-		)
-		(progn 
-			(imprime-tabuleiro new-tab)
-			(do-play-pc-pc new-tab peca num-caixas-p1 num-caixas-p2)
-		)
-		(T
-			(progn
-				(imprime-tabuleiro new-tab)
-				(do-play-pc-pc new-tab (trocar-peca peca) num-caixas-player num-caixas-p2)
-			)
-		)
-	)
-)
-
-(defun human-play (tab peca num-caixas-p1 num-caixas-p2 path)
-	(let* (
-		(play (le-jogada tab))
-		(new-tab (do-play tab peca (first play) (second play) (third play)))
-		(num-caixas-fechadas-tab-antigo (caixas-fechadas-count tab))
-		(num-caixas-fechadas-tab (caixas-fechadas-count new-tab))
-		(numero-c-p1 (+ num-caixas-p1 (- num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo)))
-	)
-	(format t "~%> Caixas Player 1: ~a~%" num-caixas-p1)
-	(format t "~%> Caixas Player 2: ~a~%" num-caixas-p2)
-	(cond
-		((winner-p new-tab num-caixas-fechadas-tab peca num-caixas-p1 num-caixas-p2)
-			(progn
-				(format t "~%> O jogador ~a ganhou!")
-			)
-		)
-		((tab-completo new-tab)
-			(progn
-				(format t "~%> Empate!")
-			)
-		)
-		(and 
-			(= peca *jogador1*)
-			(> num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo))
-		)
-		(progn 
-			(imprime-tabuleiro new-tab)
-			(pc-play new-tab peca num-caixas-p1 num-caixas-p2 path)
-		)
-		(T
-			(progn
-				(pc-play new-tab (trocar-peca peca) num-caixas-p1 num-caixas-p2 path)
-			)
-		)
-	)
-)
-	
-(defun pc-play (tab peca num-caixas-p1 num-caixas-p2 path &optional(time-play (get-universal-time)))
-	(let* (
-		(value-alfa-beta (alfabeta (criar-no tab 0 0 num-caixas-p1 num-caixas-p2) 3 peca 'f-utilidade))
-		(new-tab (get-estado pc-play))
-		(num-caixas-fechadas-tab-antigo (caixas-fechadas-count tab))
-		(num-caixas-fechadas-tab(caixas-fechadas new-tab))
-		(numero-c-p2 (+ num-caixas-p2 (- num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo)))
-		(print-winner (winner-p new-tab num-caixas-fechadas-tab peca num-caixas-p1 numero-c-p2))
-		(stats (estatisticas-log new-tab value-alfa-beta print-winner path))
-	)
-	(progn
-		(cond 
-			((winner-p new-tab num-caixas-fechadas-tab peca num-caixas-p1 numero-c-p2)
-				(progn
-					(format t "~%Ganhou!")
-					(format t "~%Tempo demorado: ~a" *start-time*)
-					stats)
-			)
-			((tab-completo new-tab)
-				(progn
-					(format t "~%Empate!")
-					(format t "~%Tempo demorado: ~a" *start-time*)
-					stats)
-			)
-			((and 
-				(= peca *jogador2*)
-				(> num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo))
-			)
-			(pc-play new-tab peca num-caixas-p1 numero-c-p2 path time-play)
-		)
-		(T (progn
-            (let ((new-time (+ *start-time* (- (get-universal-time) time-play))))
-              (let ((*start-time* new-time))
-                (format t "~%Tempo ~a:" *start-time*) (format t "segundos~%")
+    (let* (
+        (play (le-jogada tab))
+        (new-tab (do-play tab peca (first play) (second play) (third play)))
+        (num-caixas-player (caixas-fechadas-count new-tab))
+    )
+    (cond
+        ((winner-p tab num-caixas-player peca num-caixas-p1 num-caixas-p2)
+            (progn
+                (format t "~%> O jogador ~a ganhou!")
+            )
+        )
+        ((= (tab-completo) new-tab)
+            (progn
+                (format t "~%> Empate!")
+            )
+        )
+        ((and 
+            (eq peca *jogador1*)
+            (> num-caixas-player num-caixas-p1))
+            (progn 
                 (imprime-tabuleiro new-tab)
-                (human-play new-tab (trocar-peca peca))
-			  )
-			)
-		   )
-		)
-	)
-)	)
+                (play-pc-pc new-tab peca num-caixas-p1 num-caixas-p2)
+            )
+        )
+        (T
+            (progn
+                (imprime-tabuleiro new-tab)
+                (play-pc-pc new-tab (trocar-peca peca) num-caixas-player num-caixas-p2)
+            )
+        )
+    )
+))
+
+(defun pc-play (tab peca num-caixas-p1 num-caixas-p2 path &optional(time-play (get-universal-time)))
+    (let* (
+        (value-alfa-beta (alfabeta (criar-no tab 0 0 num-caixas-p1 num-caixas-p2) 3 peca 'f-utilidade))
+        (new-tab (get-estado *jogada-pc*))
+        (num-caixas-fechadas-tab-antigo (caixas-fechadas-count tab))
+        (num-caixas-fechadas-tab(caixas-fechadas new-tab))
+        (numero-c-p2 (+ num-caixas-p2 (- num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo)))
+        (print-winner (winner-p new-tab num-caixas-fechadas-tab peca num-caixas-p1 numero-c-p2))
+        (stats (estatisticas-log new-tab value-alfa-beta print-winner path))
+    )
+    (block pc-play
+ (cond 
+  ((winner-p new-tab num-caixas-fechadas-tab peca num-caixas-p1 numero-c-p2)
+   (return-from pc-play (progn
+                           (format t "~%Ganhou!")
+                           (format t "~%Tempo demorado: ~a" *start-time*)
+                           stats)))
+  ((= (tab-completo) new-tab)
+   (return-from pc-play (progn
+                           (format t "~%Empate!")
+                           (format t "~%Tempo demorado: ~a" *start-time*)
+                           stats)))
+  ((and 
+    (= peca *jogador2*)
+    (> num-caixas-fechadas-tab num-caixas-fechadas-tab-antigo))
+   (pc-play new-tab peca num-caixas-p1 numero-c-p2 path time-play))
+  (T (let ((new-time (+ *start-time* (- (get-universal-time) time-play))))
+       (let ((start-time new-time))
+         (format t "~%Tempo ~a:" *start-time*) (format t "segundos~%")
+         (imprime-tabuleiro new-tab)
+         (human-play new-tab (trocar-peca peca) num-caixas-p1 numero-c-p2 path))))))
+))
+	
+
 	
 (defun winner-p (tab new-num-caixas peca c-p1 c-p2)
-	(let*
-		(num-linhas (get-num-linhas tab))
-		(num-colunas (get-num-colunas tab))
-		(num-max-caixas (* num-linhas num-colunas))
-		(num-caixas-vencer (cond ((evenp num-max-caixas) (+ (/ num-max-caixas 2) 1)) (T (/ (+ num-max-caixas 1) 2))))
-		(resultado (>= new-num-caixas num-caixas-vencer))
-	)
-	(cond 
-		(resultado (cond
-			((and (= peca *jogador1*) (> c-p1 c-p2)) *jogador1*)
-			((and (= peca *jogador2*) (> c-p2 c-p1)) *jogador2*)
-		))
-		(T nil)
-	)
-)
+    (let*(
+        (num-linhas (get-num-linhas tab))
+        (num-colunas (get-num-colunas tab))
+        (num-max-caixas (* num-linhas num-colunas))
+        (num-caixas-vencer (cond ((evenp num-max-caixas) (+ (/ num-max-caixas 2) 1)) (T (/ (+ num-max-caixas 1) 2)))))
+      (cond 
+        ( (>= new-num-caixas num-caixas-vencer) (cond
+            ((and (= peca *jogador1*) (> c-p1 c-p2)) *jogador1*)
+            ((and (= peca *jogador2*) (> c-p2 c-p1)) *jogador2*)
+        ))
+        (T nil)
+    )
+))
 
 (defun le-jogada (tabuleiro) "Le uma jogada fazendo a verificacao da sua legalidade. A jogada lida (arco-horizontal ou arco-vertical) e a posicao na no tabuleiro (entre 1 e 8)"
 	(let* (
@@ -288,7 +238,7 @@
 )
 
 (defun le-operador ()
-"Lê o operador que o utilizador pretende executar"
+"LÃª o operador que o utilizador pretende executar"
 (format t "%> ------------------------------------------------------")
 (format t "%>| 					Tipo de Jogada 					   |")
 (format t "%>| 													   |")
@@ -301,7 +251,7 @@
 (let ((operador-lido (read)))
 (if (or (not (integerp operador-lido))
 (< operador-lido 1) (> operador-lido 2))
-(progn (format t "&Entrada inválida.")
+(progn (format t "&Entrada invÃ¡lida.")
 (le-operador))
 (if (= 1 operador-lido)
 'put-arco-horizontal
@@ -313,7 +263,7 @@
 (let ((valor-lido (read)))
 (cond ((or (not (integerp valor-lido))
 (< valor-lido 1) (> valor-lido 8))
-(format t "&Entrada inválida.")
+(format t "&Entrada invÃ¡lida.")
 (le-valor-y valor))
 (T valor-lido))))
 
@@ -322,54 +272,45 @@
 (let ((valor-lido (read)))
 (cond ((or (not (integerp valor-lido))
 (< valor-lido 1) (> valor-lido 7))
-(format t "&Entrada inválida.")
+(format t "&Entrada invÃ¡lida.")
 (le-valor-x valor))
 (T valor-lido))))
 
 
 (defun tab-init ()
-	(
- (;arcos horizontais
- (0 0 0 0 0 0)
- (0 0 0 0 0 0)
- (0 0 0 0 0 0)
- (0 0 0 0 0 0)
- (0 0 0 0 0 0)
- (0 0 0 0 0 0)
- )
- (;arcos verticais
- (0 0 0 0 0)
- (0 0 0 0 0)
- (0 0 0 0 0)
- (0 0 0 0 0)
- (0 0 0 0 0)
- (0 0 0 0 0)
- (0 0 0 0 0)
- )
-)
+  (let ((horizontal-arcs '((0 0 0 0 0 0)
+                           (0 0 0 0 0 0)
+                           (0 0 0 0 0 0)
+                           (0 0 0 0 0 0)
+                           (0 0 0 0 0 0)
+                           (0 0 0 0 0 0)))
+        (vertical-arcs '((0 0 0 0 0)
+                         (0 0 0 0 0)
+                         (0 0 0 0 0)
+                         (0 0 0 0 0)
+                         (0 0 0 0 0)
+                         (0 0 0 0 0)
+                         (0 0 0 0 0))))
+    (values horizontal-arcs vertical-arcs))
 )
 
 (defun tab-completo ()
-(;estado
- (;tabuleiro figura 1
- (;arcos horizontais
- (1 2 1 1 0 2)
- (2 1 1 1 1 0)
- (0 2 1 1 2 0)
- (0 1 0 2 2 0)
- (1 2 0 0 0 0)
- (0 1 2 1 2 1)
- )
- (;arcos verticais
- (1 0 1 0 0)
- (2 1 1 2 2)
- (2 1 1 2 0)
- (1 2 2 1 1)
- (1 2 2 0 0)
- (0 1 2 1 2)
- (2 2 1 2 0)
- )
- )))
+  (let ((horizontal-arcs '((1 2 1 1 0 2)
+                           (2 1 1 1 1 0)
+                           (0 2 1 1 2 0)
+                           (0 1 0 2 2 0)
+                           (1 2 0 0 0 0)
+                           (0 1 2 1 2 1)))
+        (vertical-arcs '((1 0 1 0 0)
+                         (2 1 1 2 2)
+                         (2 1 1 2 0)
+                         (1 2 2 1 1)
+                         (1 2 2 0 0)
+                         (0 1 2 1 2)
+                         (2 2 1 2 0))))
+    (values horizontal-arcs vertical-arcs))
+)
+
 
 (defun do-play (tab peca operador x y)
 	(funcall operador x y peca tab)
@@ -411,7 +352,7 @@
   (cond ((null (first lista)) nil)
 		(T (cons (mapcar #'first lista) (rodar (mapcar #'rest lista))))))
 
-(defun alisa (lista) "Retorna uma lista com todos os Átomos na lista principal"
+(defun alisa (lista) "Retorna uma lista com todos os Ãtomos na lista principal"
 	(cond ((null lista) nil)
 		((atom (first lista)) (cons (first lista) (alisa (rest lista))))
 		(T (alisa (append (first lista) (rest lista))))
@@ -419,7 +360,7 @@
 )
 
 (defun tabuleiro-preenchido-p (lista)
-  "Verifica se o tabuleiro está preenchido"
+  "Verifica se o tabuleiro estÃ¡ preenchido"
   (let* ((lista-alisada (alisa lista))
          (tamanho (length lista-alisada))
          (resultado (reduce #'+ (mapcar #'(lambda (n)
@@ -433,7 +374,7 @@
 	(read)
 )
 
-;; função que troca uma peça de um jogador para a peça do outro jogador
+;; função que troca uma peçaa de um jogador para a peÃ§a do outro jogador
 (defun trocar-peca (peca)
   (cond
     ((= peca 1) 2)
@@ -441,12 +382,12 @@
   )
 )
 
-(defun estatisticas-log (tabuleiro alfabeta peca-vencedora caminho) "Função que escreve as estatisticas num ficheiro e imprime na consola."	
+(defun estatisticas-log (tabuleiro alfabeta peca-vencedora caminho) "FunÃ§Ã£o que escreve as estatisticas num ficheiro e imprime na consola."	
 		(with-open-file (file (concatenate 'string caminho "\\log.dat")
 							:direction :output
 							:if-exists :append 
 							:if-does-not-exist :create)
-			;; Esta parte serÃ¡ escrita no ficheiro do tipo .DAT
+			;; Esta parte será escrita no ficheiro do tipo .DAT
 			(format file "~%Vencedor: ~s ~%" peca-vencedora)
 			(format file "~%Tabuleiro: ~s ~%" tabuleiro)
 			(format file "~%Caixas Fechadas: ~s ~%" (caixas-fechadas-count tabuleiro))
@@ -456,7 +397,7 @@
 			(format file "~%Tempo Maximo ~s ~%" *tempo-despendido*)
 			(format file "___________________________________________________~%~%~%")
 		)	
-		;;Esta parte serÃ¡ mostrada na consola
+		;;Esta parte será mostrada na consola
 			(format t "~%Vencedor: ~s ~%" peca-vencedora)
 			(format t "~%Tabuleiro: ~s ~%" tabuleiro)
 			(format t "~%Caixas Fechadas: ~s ~%" (caixas-fechadas-count tabuleiro))		
